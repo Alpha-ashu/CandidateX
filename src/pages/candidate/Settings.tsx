@@ -1,301 +1,469 @@
 import { useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Switch } from '../../components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Separator } from '../../components/ui/separator';
-import { User, Bell, Shield, Palette, Globe } from 'lucide-react';
+import { Textarea } from '../../components/ui/textarea';
+import { useAuth } from '../../App';
+import { Bell, User, Lock, Globe, Briefcase, Save } from 'lucide-react';
+import { toast } from 'sonner@2.0.3';
 
-export default function Settings() {
-  const [settings, setSettings] = useState({
-    // Profile settings
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    bio: 'Experienced software engineer with 5+ years in full-stack development.',
-
-    // Notification settings
-    emailNotifications: true,
-    interviewReminders: true,
-    feedbackNotifications: true,
-    marketingEmails: false,
-
-    // Privacy settings
-    profileVisibility: 'private',
-    showActivity: false,
-    allowDataCollection: true,
-
-    // Appearance settings
-    theme: 'light',
-    language: 'en',
-    timezone: 'UTC+5:30'
-  });
+export default function CandidateSettings() {
+  const { user } = useAuth();
+  const [saving, setSaving] = useState(false);
 
   const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Saving settings:', settings);
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      toast.success('Settings saved successfully!');
+    }, 1000);
   };
 
   return (
     <DashboardLayout role="candidate">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h2 className="text-3xl mb-2">Settings</h2>
-          <p className="text-gray-600">
-            Manage your account settings and preferences
-          </p>
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl mb-2">Settings</h1>
+          <p className="text-gray-600">Manage your account settings and preferences</p>
         </div>
 
-        <div className="space-y-6">
-          {/* Profile Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Profile Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={settings.firstName}
-                    onChange={(e) => setSettings({ ...settings, firstName: e.target.value })}
-                    className="mt-1"
-                  />
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="profile">
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="notifications">
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="privacy">
+              <Lock className="w-4 h-4 mr-2" />
+              Privacy
+            </TabsTrigger>
+            <TabsTrigger value="preferences">
+              <Globe className="w-4 h-4 mr-2" />
+              Preferences
+            </TabsTrigger>
+            <TabsTrigger value="career">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Career Profile
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>Update your personal information and profile picture</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-6">
+                  <Avatar className="w-24 h-24">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-2xl">
+                      {user?.name.split(' ').map(n => n[0]).join('') || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <Button variant="outline" size="sm">Upload Photo</Button>
+                    <p className="text-sm text-gray-500 mt-2">JPG, GIF or PNG. Max size 2MB</p>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={settings.lastName}
-                    onChange={(e) => setSettings({ ...settings, lastName: e.target.value })}
-                    className="mt-1"
-                  />
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" defaultValue={user?.name.split(' ')[0]} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" defaultValue={user?.name.split(' ').slice(1).join(' ')} />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={settings.email}
-                  onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={settings.bio}
-                  onChange={(e) => setSettings({ ...settings, bio: e.target.value })}
-                  rows={3}
-                  className="mt-1"
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Notification Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="emailNotifications">Email Notifications</Label>
-                  <p className="text-sm text-gray-600">Receive email updates about your account</p>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" defaultValue={user?.email} />
                 </div>
-                <Switch
-                  id="emailNotifications"
-                  checked={settings.emailNotifications}
-                  onCheckedChange={(checked: boolean) => setSettings({ ...settings, emailNotifications: checked })}
-                />
-              </div>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="interviewReminders">Interview Reminders</Label>
-                  <p className="text-sm text-gray-600">Get reminded about upcoming interviews</p>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
                 </div>
-                <Switch
-                  id="interviewReminders"
-                  checked={settings.interviewReminders}
-                  onCheckedChange={(checked: boolean) => setSettings({ ...settings, interviewReminders: checked })}
-                />
-              </div>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="feedbackNotifications">Feedback Notifications</Label>
-                  <p className="text-sm text-gray-600">Receive notifications when feedback is available</p>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea id="bio" placeholder="Tell us about yourself..." rows={4} />
                 </div>
-                <Switch
-                  id="feedbackNotifications"
-                  checked={settings.feedbackNotifications}
-                  onCheckedChange={(checked: boolean) => setSettings({ ...settings, feedbackNotifications: checked })}
-                />
-              </div>
 
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="marketingEmails">Marketing Emails</Label>
-                  <p className="text-sm text-gray-600">Receive emails about new features and updates</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" placeholder="City, Country" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select defaultValue="utc-5">
+                      <SelectTrigger id="timezone">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="utc-8">UTC-8 (PST)</SelectItem>
+                        <SelectItem value="utc-5">UTC-5 (EST)</SelectItem>
+                        <SelectItem value="utc+0">UTC+0 (GMT)</SelectItem>
+                        <SelectItem value="utc+1">UTC+1 (BST)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <Switch
-                  id="marketingEmails"
-                  checked={settings.marketingEmails}
-                  onCheckedChange={(checked: boolean) => setSettings({ ...settings, marketingEmails: checked })}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Privacy Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Privacy & Security
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="profileVisibility">Profile Visibility</Label>
-                <Select
-                  value={settings.profileVisibility}
-                  onValueChange={(value: string) => setSettings({ ...settings, profileVisibility: value })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="showActivity">Show Activity Status</Label>
-                  <p className="text-sm text-gray-600">Let others see when you're active</p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Change Password</CardTitle>
+                <CardDescription>Update your password to keep your account secure</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currentPassword">Current Password</Label>
+                  <Input id="currentPassword" type="password" />
                 </div>
-                <Switch
-                  id="showActivity"
-                  checked={settings.showActivity}
-                  onCheckedChange={(checked: boolean) => setSettings({ ...settings, showActivity: checked })}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="allowDataCollection">Analytics & Data Collection</Label>
-                  <p className="text-sm text-gray-600">Help improve our service by sharing usage data</p>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input id="newPassword" type="password" />
                 </div>
-                <Switch
-                  id="allowDataCollection"
-                  checked={settings.allowDataCollection}
-                  onCheckedChange={(checked: boolean) => setSettings({ ...settings, allowDataCollection: checked })}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Input id="confirmPassword" type="password" />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          {/* Appearance Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="w-5 h-5" />
-                Appearance
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="theme">Theme</Label>
-                <Select
-                  value={settings.theme}
-                  onValueChange={(value: string) => setSettings({ ...settings, theme: value })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Notifications</CardTitle>
+                <CardDescription>Manage your email notification preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Interview Reminders</div>
+                    <div className="text-sm text-gray-500">Get notified about upcoming interviews</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
 
-              <div>
-                <Label htmlFor="language">Language</Label>
-                <Select
-                  value={settings.language}
-                  onValueChange={(value: string) => setSettings({ ...settings, language: value })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Interview Results</div>
+                    <div className="text-sm text-gray-500">Receive your interview scores and feedback</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
 
-              <div>
-                <Label htmlFor="timezone">Timezone</Label>
-                <Select
-                  value={settings.timezone}
-                  onValueChange={(value: string) => setSettings({ ...settings, timezone: value })}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UTC+5:30">IST (UTC+5:30)</SelectItem>
-                    <SelectItem value="UTC+0">GMT (UTC+0)</SelectItem>
-                    <SelectItem value="UTC-5">EST (UTC-5)</SelectItem>
-                    <SelectItem value="UTC-8">PST (UTC-8)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>New Opportunities</div>
+                    <div className="text-sm text-gray-500">Get matched with relevant job opportunities</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
 
-          {/* Save Button */}
-          <div className="flex justify-end">
-            <Button onClick={handleSave} size="lg">
-              Save Changes
-            </Button>
-          </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Weekly Summary</div>
+                    <div className="text-sm text-gray-500">Receive a weekly summary of your progress</div>
+                  </div>
+                  <Switch />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Marketing Emails</div>
+                    <div className="text-sm text-gray-500">Receive tips, news, and product updates</div>
+                  </div>
+                  <Switch />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Push Notifications</CardTitle>
+                <CardDescription>Manage browser push notification settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Enable Push Notifications</div>
+                    <div className="text-sm text-gray-500">Get instant updates in your browser</div>
+                  </div>
+                  <Switch />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Interview Starting Soon</div>
+                    <div className="text-sm text-gray-500">5 minute reminder before interviews</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Privacy Tab */}
+          <TabsContent value="privacy" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Privacy Settings</CardTitle>
+                <CardDescription>Control who can see your information</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Profile Visibility</div>
+                    <div className="text-sm text-gray-500">Make your profile visible to recruiters</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Show Interview History</div>
+                    <div className="text-sm text-gray-500">Display your interview performance to recruiters</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Anonymous Mode</div>
+                    <div className="text-sm text-gray-500">Hide your name from recruiters during screening</div>
+                  </div>
+                  <Switch />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="profileVisibility">Who can contact you?</Label>
+                  <Select defaultValue="verified">
+                    <SelectTrigger id="profileVisibility">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="everyone">Everyone</SelectItem>
+                      <SelectItem value="verified">Verified Recruiters Only</SelectItem>
+                      <SelectItem value="none">No One</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Data & Privacy</CardTitle>
+                <CardDescription>Manage your data and account</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button variant="outline">Download My Data</Button>
+                <Button variant="outline">Delete Account</Button>
+                <p className="text-sm text-gray-500">
+                  These actions are irreversible. Please proceed with caution.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Preferences Tab */}
+          <TabsContent value="preferences" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Interview Preferences</CardTitle>
+                <CardDescription>Customize your interview experience</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="difficulty">Preferred Interview Difficulty</Label>
+                  <Select defaultValue="medium">
+                    <SelectTrigger id="difficulty">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="easy">Easy</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="hard">Hard</SelectItem>
+                      <SelectItem value="adaptive">Adaptive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Default Interview Duration</Label>
+                  <Select defaultValue="30">
+                    <SelectTrigger id="duration">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                      <SelectItem value="60">60 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Enable Camera</div>
+                    <div className="text-sm text-gray-500">Turn on camera for video interviews</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <div>Auto-save Responses</div>
+                    <div className="text-sm text-gray-500">Automatically save your answers during interviews</div>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Display Settings</CardTitle>
+                <CardDescription>Customize how CandidateX looks</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="theme">Theme</Label>
+                  <Select defaultValue="light">
+                    <SelectTrigger id="theme">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="system">System</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="language">Language</Label>
+                  <Select defaultValue="en">
+                    <SelectTrigger id="language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Career Profile Tab */}
+          <TabsContent value="career" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Career Information</CardTitle>
+                <CardDescription>Tell recruiters about your career goals</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="currentTitle">Current Job Title</Label>
+                  <Input id="currentTitle" placeholder="e.g., Software Engineer" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Years of Experience</Label>
+                  <Select defaultValue="3-5">
+                    <SelectTrigger id="experience">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0-1">0-1 years</SelectItem>
+                      <SelectItem value="1-3">1-3 years</SelectItem>
+                      <SelectItem value="3-5">3-5 years</SelectItem>
+                      <SelectItem value="5-10">5-10 years</SelectItem>
+                      <SelectItem value="10+">10+ years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="desiredRole">Desired Role</Label>
+                  <Input id="desiredRole" placeholder="e.g., Senior Software Engineer" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="skills">Skills</Label>
+                  <Textarea id="skills" placeholder="Enter your skills, separated by commas" rows={3} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="jobType">Preferred Job Type</Label>
+                  <Select defaultValue="full-time">
+                    <SelectTrigger id="jobType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full-time">Full-time</SelectItem>
+                      <SelectItem value="part-time">Part-time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="freelance">Freelance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="workLocation">Work Location Preference</Label>
+                  <Select defaultValue="hybrid">
+                    <SelectTrigger id="workLocation">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="remote">Remote</SelectItem>
+                      <SelectItem value="onsite">On-site</SelectItem>
+                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="salary">Expected Salary Range</Label>
+                  <Input id="salary" placeholder="e.g., $80,000 - $120,000" />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Save Button */}
+        <div className="flex justify-end gap-3">
+          <Button variant="outline">Cancel</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
       </div>
     </DashboardLayout>

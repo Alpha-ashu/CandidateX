@@ -14,87 +14,60 @@ import {
   ChevronLeft,
   ChevronRight,
   Lightbulb,
-  Shield,
-  Loader2
+  Shield
 } from 'lucide-react';
 
-interface Question {
-  id: string;
-  question_text: string;
-  type: string;
-  category: string;
-  difficulty_level: string;
-  skills_assessed: string[];
-  time_limit: number;
-}
-
-interface InterviewData {
-  id: string;
-  questions: Question[];
-  question_count: number;
-  time_limit_per_question: number;
-  status: string;
-}
+const mockQuestions = [
+  {
+    id: 1,
+    question: "Tell me about yourself and your background in software development.",
+    type: "Behavioral"
+  },
+  {
+    id: 2,
+    question: "Describe a challenging project you worked on and how you overcame the difficulties.",
+    type: "Behavioral"
+  },
+  {
+    id: 3,
+    question: "How do you handle conflicts with team members when working on a project?",
+    type: "Behavioral"
+  },
+  {
+    id: 4,
+    question: "Explain the difference between REST and GraphQL APIs. When would you use each?",
+    type: "Technical"
+  },
+  {
+    id: 5,
+    question: "What is your approach to debugging a production issue?",
+    type: "Technical"
+  },
+];
 
 export default function MockInterviewSession() {
   const navigate = useNavigate();
   const { sessionId } = useParams();
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<string[]>(Array(mockQuestions.length).fill(''));
   const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes
   const [isRecording, setIsRecording] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [aiFeedback, setAiFeedback] = useState('');
-  const [interviewData, setInterviewData] = useState<InterviewData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch interview data
-    const fetchInterviewData = async () => {
-      if (!sessionId) return;
-
-      try {
-        const response = await fetch(`/api/v1/interviews/${sessionId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setInterviewData(data);
-          setAnswers(new Array(data.questions.length).fill(''));
-          setTimeRemaining(data.time_limit_per_question);
-        } else {
-          setError('Failed to load interview data');
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
         }
-      } catch (err) {
-        setError('Error loading interview data');
-        console.error('Error fetching interview:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+        return prev - 1;
+      });
+    }, 1000);
 
-    fetchInterviewData();
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (interviewData) {
-      const timer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [currentQuestion, interviewData]);
+    return () => clearInterval(timer);
+  }, [currentQuestion]);
 
   useEffect(() => {
     // Simulate AI feedback after typing
@@ -128,11 +101,9 @@ export default function MockInterviewSession() {
   };
 
   const handleNext = () => {
-    if (!interviewData) return;
-
-    if (currentQuestion < interviewData.questions.length - 1) {
+    if (currentQuestion < mockQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setTimeRemaining(interviewData.time_limit_per_question);
+      setTimeRemaining(180);
       setAiFeedback('');
     } else {
       navigate(`/candidate/mock-interview/summary/${sessionId}`);
@@ -140,11 +111,9 @@ export default function MockInterviewSession() {
   };
 
   const handlePrevious = () => {
-    if (!interviewData) return;
-
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
-      setTimeRemaining(interviewData.time_limit_per_question);
+      setTimeRemaining(180);
       setAiFeedback('');
     }
   };
@@ -155,32 +124,8 @@ export default function MockInterviewSession() {
     setAnswers(newAnswers);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Loading interview...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !interviewData) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Failed to load interview'}</p>
-          <Button onClick={() => navigate('/candidate/dashboard')}>
-            Return to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const progress = ((currentQuestion + 1) / interviewData.questions.length) * 100;
-  const question = interviewData.questions[currentQuestion];
+  const progress = ((currentQuestion + 1) / mockQuestions.length) * 100;
+  const question = mockQuestions[currentQuestion];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -194,7 +139,7 @@ export default function MockInterviewSession() {
                 Anti-Cheat Active
               </Badge>
               <span className="text-gray-600">
-                Question {currentQuestion + 1} of {interviewData.questions.length}
+                Question {currentQuestion + 1} of {mockQuestions.length}
               </span>
               <Badge variant="outline">{question.type}</Badge>
             </div>
@@ -232,7 +177,7 @@ export default function MockInterviewSession() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl mb-4">Question:</h2>
               <p className="text-lg text-gray-700 leading-relaxed">
-                {question.question_text}
+                {question.question}
               </p>
             </div>
 
@@ -286,7 +231,7 @@ export default function MockInterviewSession() {
                 onClick={handleNext}
                 className="flex-1 gap-2"
               >
-                {currentQuestion === interviewData.questions.length - 1 ? 'Finish Interview' : 'Next Question'}
+                {currentQuestion === mockQuestions.length - 1 ? 'Finish Interview' : 'Next Question'}
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -343,7 +288,7 @@ export default function MockInterviewSession() {
             <div className="bg-white rounded-lg shadow-sm p-4">
               <h3 className="mb-3">Questions</h3>
               <div className="grid grid-cols-5 gap-2">
-                {interviewData.questions.map((_, idx) => (
+                {mockQuestions.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentQuestion(idx)}

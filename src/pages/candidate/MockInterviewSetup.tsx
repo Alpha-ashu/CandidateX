@@ -30,39 +30,10 @@ export default function MockInterviewSetup() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      const response = await fetch('/api/v1/interviews/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({
-          job_title: formData.jobTitle,
-          company: formData.company,
-          job_description: formData.jobDescription,
-          experience_level: formData.experienceLevel,
-          question_count: formData.questionCount,
-          time_limit_per_question: formData.timePerQuestion * 60, // Convert minutes to seconds
-          mode: formData.interviewType,
-          type: 'mock'
-        })
-      });
-
-      if (response.ok) {
-        const interviewData = await response.json();
-        navigate(`/candidate/mock-interview/precheck/${interviewData.id}`);
-      } else {
-        console.error('Failed to create interview');
-        // TODO: Show error message to user
-      }
-    } catch (error) {
-      console.error('Error creating interview:', error);
-      // TODO: Show error message to user
-    }
+    const sessionId = Math.random().toString(36).substring(7);
+    navigate(`/candidate/mock-interview/precheck/${sessionId}`);
   };
 
   return (
@@ -162,7 +133,7 @@ export default function MockInterviewSetup() {
                     <Label>Interview Type *</Label>
                     <RadioGroup
                       value={formData.interviewType}
-                      onValueChange={(value: string) => setFormData({ ...formData, interviewType: value })}
+                      onValueChange={(value) => setFormData({ ...formData, interviewType: value })}
                       className="mt-3 space-y-3"
                     >
                       <div className="flex items-center space-x-2">
@@ -199,7 +170,7 @@ export default function MockInterviewSetup() {
                     <Label>Experience Level *</Label>
                     <RadioGroup
                       value={formData.experienceLevel}
-                      onValueChange={(value: string) => setFormData({ ...formData, experienceLevel: value })}
+                      onValueChange={(value) => setFormData({ ...formData, experienceLevel: value })}
                       className="mt-3 space-y-2"
                     >
                       <div className="flex items-center space-x-2">
@@ -221,7 +192,7 @@ export default function MockInterviewSetup() {
                     <Label>Question Count: {formData.questionCount}</Label>
                     <Slider
                       value={[formData.questionCount]}
-                      onValueChange={(value: number[]) => setFormData({ ...formData, questionCount: value[0] })}
+                      onValueChange={(value) => setFormData({ ...formData, questionCount: value[0] })}
                       min={5}
                       max={20}
                       step={1}
@@ -237,7 +208,7 @@ export default function MockInterviewSetup() {
                     <Label>Time per Question: {formData.timePerQuestion} min</Label>
                     <Slider
                       value={[formData.timePerQuestion]}
-                      onValueChange={(value: number[]) => setFormData({ ...formData, timePerQuestion: value[0] })}
+                      onValueChange={(value) => setFormData({ ...formData, timePerQuestion: value[0] })}
                       min={1}
                       max={5}
                       step={1}

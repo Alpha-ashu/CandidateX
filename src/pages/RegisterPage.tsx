@@ -1,19 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
-import { Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, Circle } from 'lucide-react';
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const { register } = useAuth();
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -36,22 +35,13 @@ export default function RegisterPage() {
   const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
   const strengthColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (step < 3) {
       setStep(step + 1);
     } else {
-      setLoading(true);
-      setError('');
-      try {
-        await register(formData);
-        // Navigation will happen automatically after login
-      } catch (error: any) {
-        console.error('Registration failed:', error);
-        setError(error.message || 'Registration failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+      register(formData);
+      navigate(`/${formData.role}/dashboard`);
     }
   };
 
@@ -98,12 +88,6 @@ export default function RegisterPage() {
               <span>Preferences</span>
             </div>
           </div>
-
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Step 1: Account */}
@@ -189,7 +173,7 @@ export default function RegisterPage() {
                   <Checkbox
                     id="terms"
                     checked={formData.agreeToTerms}
-                    onCheckedChange={(checked: boolean) => updateFormData('agreeToTerms', checked)}
+                    onCheckedChange={(checked) => updateFormData('agreeToTerms', checked)}
                     required
                   />
                   <Label htmlFor="terms" className="text-sm cursor-pointer leading-tight">
@@ -206,7 +190,7 @@ export default function RegisterPage() {
                   <Label>What brings you to CandidateX?</Label>
                   <RadioGroup
                     value={formData.role}
-                    onValueChange={(value: string) => updateFormData('role', value)}
+                    onValueChange={(value) => updateFormData('role', value)}
                     className="mt-3 space-y-3"
                   >
                     <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50">
@@ -315,9 +299,9 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={(step === 1 && (!formData.agreeToTerms || formData.password !== formData.confirmPassword)) || loading}
+                disabled={step === 1 && (!formData.agreeToTerms || formData.password !== formData.confirmPassword)}
               >
-                {loading ? 'Creating Account...' : step === 3 ? 'Complete Setup' : 'Continue'}
+                {step === 3 ? 'Complete Setup' : 'Continue'}
               </Button>
             </div>
           </form>

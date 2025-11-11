@@ -11,26 +11,23 @@ import MockInterviewSummary from './pages/candidate/MockInterviewSummary';
 import ResumeTools from './pages/candidate/ResumeTools';
 import AIAssistant from './pages/candidate/AIAssistant';
 import Events from './pages/candidate/Events';
-import Settings from './pages/candidate/Settings';
+import CandidateSettings from './pages/candidate/Settings';
 import RecruiterDashboard from './pages/recruiter/Dashboard';
 import ResumeAnalyzer from './pages/recruiter/ResumeAnalyzer';
+import CandidateProfile from './pages/recruiter/CandidateProfile';
+import RecruiterSettings from './pages/recruiter/Settings';
 import AdminDashboard from './pages/admin/Dashboard';
+import AdminSettings from './pages/admin/Settings';
+import { authApi, authHelpers, User } from './lib/api';
 
 // Auth Context
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'candidate' | 'recruiter' | 'admin';
-  avatar?: string;
-}
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  register: (data: any) => Promise<void>;
+  register: (data: { email: string; password: string; full_name: string; role: 'candidate' | 'recruiter' | 'admin' }) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,7 +40,11 @@ export const useAuth = () => {
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   
   if (!user) {
     return <Navigate to="/login" />;
@@ -62,58 +63,41 @@ export default function App() {
 
   // Load user from localStorage on app start
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    const userData = localStorage.getItem('user_data');
-
-    if (token && userData) {
+    const initializeAuth = async () => {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        if (authHelpers.isAuthenticated()) {
+          const { data, status } = await authApi.getCurrentUser();
+          if (status === 'success' && data) {
+            setUser(data);
+            authHelpers.setUserData(data);
+          } else {
+            // Token might be invalid, clear it
+            authHelpers.clearTokens();
+          }
+        }
       } catch (error) {
-        console.error('Failed to parse user data:', error);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user_data');
+        console.error('Failed to initialize auth:', error);
+        authHelpers.clearTokens();
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Login failed');
+      const { data, status, error } = await authApi.login({ email, password });
+      
+      if (status === 'success' && data) {
+        // Store tokens
+        authHelpers.setTokens(data.access_token, data.refresh_token);
+        authHelpers.setUserData(data.user);
+        setUser(data.user);
+      } else {
+        throw new Error(error || 'Login failed');
       }
-
-      const data = await response.json();
-
-      // Store tokens
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('refresh_token', data.refresh_token);
-
-      // Store user data
-      const userData: User = {
-        id: data.user.id,
-        name: data.user.full_name,
-        email: data.user.email,
-        role: data.user.role,
-        avatar: undefined, // Add avatar support later if needed
-      };
-
-      localStorage.setItem('user_data', JSON.stringify(userData));
-      setUser(userData);
-
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -121,43 +105,44 @@ export default function App() {
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user_data');
+    authHelpers.clearTokens();
     setUser(null);
   };
 
-  const register = async (data: any) => {
+  const register = async (data: { email: string; password: string; full_name: string; role: 'candidate' | 'recruiter' | 'admin' }) => {
     try {
-      const response = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          full_name: data.name,
-          role: data.role || 'candidate',
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Registration failed');
+      const { data: authData, status, error } = await authApi.register(data);
+      
+      if (status === 'success' && authData) {
+        // Store tokens
+        authHelpers.setTokens(authData.access_token, authData.refresh_token);
+        authHelpers.setUserData(authData.user);
+        setUser(authData.user);
+      } else {
+        throw new Error(error || 'Registration failed');
       }
-
-      // After successful registration, automatically log in
-      await login(data.email, data.password);
-
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      if (authHelpers.isAuthenticated()) {
+        const { data, status } = await authApi.getCurrentUser();
+        if (status === 'success' && data) {
+          setUser(data);
+          authHelpers.setUserData(data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser }}>
       <Router>
         <Routes>
           {/* Public Routes */}
@@ -234,7 +219,7 @@ export default function App() {
             path="/candidate/settings"
             element={
               <ProtectedRoute allowedRoles={['candidate']}>
-                <Settings />
+                <CandidateSettings />
               </ProtectedRoute>
             }
           />
@@ -256,6 +241,22 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/recruiter/candidate-profile/:candidateId"
+            element={
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <CandidateProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recruiter/settings"
+            element={
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <RecruiterSettings />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin Routes */}
           <Route
@@ -263,6 +264,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminSettings />
               </ProtectedRoute>
             }
           />

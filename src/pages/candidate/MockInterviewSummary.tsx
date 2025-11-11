@@ -1,5 +1,4 @@
 import { Link, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Progress } from '../../components/ui/progress';
@@ -12,107 +11,19 @@ import {
   RefreshCw,
   Home,
   CheckCircle,
-  XCircle,
-  Loader2
+  XCircle
 } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from 'recharts';
 
-interface InterviewData {
-  id: string;
-  status: string;
-  overall_score: number | null;
-  ai_feedback: {
-    overall_score?: number;
-    communication_score?: number;
-    technical_score?: number;
-    problem_solving_score?: number;
-    behavioral_score?: number;
-    strengths?: string[];
-    weaknesses?: string[];
-    recommendations?: string[];
-  } | null;
-}
-
 export default function MockInterviewSummary() {
   const { sessionId } = useParams();
-  const [interviewData, setInterviewData] = useState<InterviewData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchInterviewData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/v1/interviews/${sessionId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch interview data');
-        }
-
-        const data = await response.json();
-        setInterviewData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (sessionId) {
-      fetchInterviewData();
-    }
-  }, [sessionId]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Loading interview summary...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !interviewData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Interview data not found'}</p>
-          <Link to="/candidate/dashboard">
-            <Button>
-              <Home className="w-5 h-5 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if AI feedback is still being generated
-  if (!interviewData.ai_feedback && interviewData.status === 'completed') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Generating your personalized feedback...</p>
-          <p className="text-sm text-gray-600 mt-2">This may take a moment</p>
-        </div>
-      </div>
-    );
-  }
-
-  const overallScore = interviewData.overall_score || interviewData.ai_feedback?.overall_score || 0;
+  const overallScore = 78;
   const scores = {
-    communication: (interviewData.ai_feedback?.communication_score || 0) * 10, // Convert to 0-100 scale
-    technicalKnowledge: (interviewData.ai_feedback?.technical_score || 0) * 10,
-    problemSolving: (interviewData.ai_feedback?.problem_solving_score || 0) * 10,
-    bodyLanguage: (interviewData.ai_feedback?.behavioral_score || 0) * 10,
+    communication: 82,
+    technicalKnowledge: 75,
+    problemSolving: 80,
+    bodyLanguage: 70
   };
 
   const radarData = [
@@ -120,13 +31,42 @@ export default function MockInterviewSummary() {
     { subject: 'Technical', value: scores.technicalKnowledge, fullMark: 100 },
     { subject: 'Problem Solving', value: scores.problemSolving, fullMark: 100 },
     { subject: 'Body Language', value: scores.bodyLanguage, fullMark: 100 },
-    { subject: 'Clarity', value: Math.max(scores.communication - 10, 0), fullMark: 100 },
-    { subject: 'Confidence', value: Math.max(scores.bodyLanguage - 5, 0), fullMark: 100 },
+    { subject: 'Clarity', value: 85, fullMark: 100 },
+    { subject: 'Confidence', value: 73, fullMark: 100 },
   ];
 
-  const strengths = interviewData.ai_feedback?.strengths || [];
-  const improvements = interviewData.ai_feedback?.weaknesses || [];
-  const recommendations = interviewData.ai_feedback?.recommendations || [];
+  const strengths = [
+    'Clear and articulate communication style',
+    'Good problem-solving approach with structured thinking',
+    'Strong technical foundation and understanding',
+    'Effective use of examples to illustrate points',
+  ];
+
+  const improvements = [
+    'Practice speaking more confidently about your achievements',
+    'Include more specific metrics and quantifiable results',
+    'Work on maintaining better eye contact with the camera',
+    'Reduce filler words (um, uh, like) during responses',
+  ];
+
+  const recommendations = [
+    {
+      title: 'Practice with a timer',
+      description: 'Set 2-minute timers for each question to improve pacing and conciseness',
+    },
+    {
+      title: 'Record yourself',
+      description: 'Watch your recordings to identify body language and verbal patterns to improve',
+    },
+    {
+      title: 'Master the STAR method',
+      description: 'Practice structuring behavioral answers using Situation, Task, Action, Result',
+    },
+    {
+      title: 'Research common questions',
+      description: 'Prepare answers for the top 20 most common interview questions in your field',
+    },
+  ];
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -301,7 +241,8 @@ export default function MockInterviewSummary() {
             <div className="grid md:grid-cols-2 gap-4">
               {recommendations.map((rec, idx) => (
                 <div key={idx} className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">{rec}</p>
+                  <h4 className="mb-2 text-blue-900">{rec.title}</h4>
+                  <p className="text-sm text-blue-800">{rec.description}</p>
                 </div>
               ))}
             </div>

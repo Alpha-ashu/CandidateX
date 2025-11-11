@@ -178,7 +178,9 @@ export default function RecruiterDashboard() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3>{interview.candidate}</h3>
+                        <Link to={`/recruiter/candidate-profile/${idx + 1}`} className="hover:text-blue-600">
+                          <h3>{interview.candidate}</h3>
+                        </Link>
                         <span className="text-sm text-gray-500">• {interview.position}</span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-600">

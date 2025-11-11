@@ -170,13 +170,17 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
+                  <DropdownMenuItem asChild>
+                    <Link to={`/${role}/profile`} className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
+                  <DropdownMenuItem asChild>
+                    <Link to={`/${role}/settings`} className="cursor-pointer">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>

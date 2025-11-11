@@ -15,34 +15,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      await login(email, password);
-      // Navigation will happen automatically based on user role
-      navigate('/candidate/dashboard'); // Default fallback
-    } catch (err: any) {
-      // Error is handled by the login function
-      console.error('Login failed:', err.message);
-    }
+    // Determine role based on email for demo purposes
+    const role = email.includes('recruiter') ? 'recruiter' : email.includes('admin') ? 'admin' : 'candidate';
+    login(email, password, role);
+    navigate(`/${role}/dashboard`);
   };
 
-  const handleDemoLogin = async (role: 'candidate' | 'recruiter' | 'admin') => {
-    const demoCredentials = {
-      candidate: { email: 'test.candidate@candidatex.com', password: 'Test123!' },
-      recruiter: { email: 'test.recruiter@candidatex.com', password: 'Test123!' },
-      admin: { email: 'admin@candidatex.com', password: 'Admin123!' }
-    };
-
-    const creds = demoCredentials[role];
-    try {
-      await login(creds.email, creds.password);
-      // Navigation will happen automatically
-    } catch (err: any) {
-      // Error is handled by the login function
-      console.error('Demo login failed:', err.message);
-    }
+  const handleDemoLogin = (role: 'candidate' | 'recruiter') => {
+    const demoEmail = role === 'candidate' ? 'demo@candidate.com' : 'demo@recruiter.com';
+    login(demoEmail, 'demo123', role);
+    navigate(`/${role}/dashboard`);
   };
 
   return (
@@ -102,7 +86,7 @@ export default function LoginPage() {
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked: boolean) => setRememberMe(checked)}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
                 <Label htmlFor="remember" className="text-sm cursor-pointer">
                   Remember me for 30 days
@@ -153,42 +137,26 @@ export default function LoginPage() {
 
           {/* Demo Accounts */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-3">Demo accounts (auto-created):</p>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin('candidate')}
-                  className="flex-1"
-                >
-                  Candidate
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin('recruiter')}
-                  className="flex-1"
-                >
-                  Recruiter
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDemoLogin('admin')}
-                  className="flex-1"
-                >
-                  Admin
-                </Button>
-              </div>
-              <div className="text-xs text-gray-500 space-y-1">
-                <div><strong>Candidate:</strong> test.candidate@candidatex.com / Test123!</div>
-                <div><strong>Recruiter:</strong> test.recruiter@candidatex.com / Test123!</div>
-                <div><strong>Admin:</strong> admin@candidatex.com / Admin123!</div>
-              </div>
+            <p className="text-sm text-gray-600 mb-3">Try demo accounts:</p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleDemoLogin('candidate')}
+                className="flex-1"
+              >
+                Candidate Demo
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleDemoLogin('recruiter')}
+                className="flex-1"
+              >
+                Recruiter Demo
+              </Button>
             </div>
           </div>
 

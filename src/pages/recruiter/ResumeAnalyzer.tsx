@@ -17,6 +17,7 @@ import {
   Star,
   FileText
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function ResumeAnalyzer() {
   const [uploaded, setUploaded] = useState(false);
@@ -210,9 +211,10 @@ export default function ResumeAnalyzer() {
                   <CardContent>
                     <div className="space-y-4">
                       {mockCandidates.map((candidate, idx) => (
-                        <div
+                        <Link
                           key={idx}
-                          className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                          to={`/recruiter/candidate-profile/${idx + 1}`}
+                          className="block p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
                         >
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex items-center gap-3">
@@ -269,7 +271,7 @@ export default function ResumeAnalyzer() {
                               Schedule
                             </Button>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </CardContent>
