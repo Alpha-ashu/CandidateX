@@ -1,0 +1,3 @@
+"""
+CandidateX backend application package.
+"""
