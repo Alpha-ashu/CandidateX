@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, createContext, useContext, useEffect } from 'react';
+import { useState, createContext, useContext } from 'react';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -12,22 +12,30 @@ import ResumeTools from './pages/candidate/ResumeTools';
 import AIAssistant from './pages/candidate/AIAssistant';
 import Events from './pages/candidate/Events';
 import CandidateSettings from './pages/candidate/Settings';
+import CandidateProfile from './pages/candidate/Profile';
 import RecruiterDashboard from './pages/recruiter/Dashboard';
 import ResumeAnalyzer from './pages/recruiter/ResumeAnalyzer';
-import CandidateProfile from './pages/recruiter/CandidateProfile';
+import RecruiterCandidateProfile from './pages/recruiter/CandidateProfile';
 import RecruiterSettings from './pages/recruiter/Settings';
+import RecruiterProfile from './pages/recruiter/Profile';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminSettings from './pages/admin/Settings';
-import { authApi, authHelpers, User } from './lib/api';
+import AdminProfile from './pages/admin/Profile';
 
 // Auth Context
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'candidate' | 'recruiter' | 'admin';
+  avatar?: string;
+}
+
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, role: string) => void;
   logout: () => void;
-  register: (data: { email: string; password: string; full_name: string; role: 'candidate' | 'recruiter' | 'admin' }) => Promise<void>;
-  refreshUser: () => Promise<void>;
+  register: (data: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,11 +48,7 @@ export const useAuth = () => {
 
 // Protected Route Component
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: string[] }) {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const { user } = useAuth();
   
   if (!user) {
     return <Navigate to="/login" />;
@@ -59,90 +63,36 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on app start
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        if (authHelpers.isAuthenticated()) {
-          const { data, status } = await authApi.getCurrentUser();
-          if (status === 'success' && data) {
-            setUser(data);
-            authHelpers.setUserData(data);
-          } else {
-            // Token might be invalid, clear it
-            authHelpers.clearTokens();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-        authHelpers.clearTokens();
-      } finally {
-        setLoading(false);
-      }
+  const login = (email: string, password: string, role: string) => {
+    // Mock login
+    const mockUser: User = {
+      id: '1',
+      name: email === 'recruiter@example.com' ? 'Sarah Johnson' : 'Alex Chen',
+      email,
+      role: role as 'candidate' | 'recruiter' | 'admin',
+      avatar: undefined
     };
-
-    initializeAuth();
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    try {
-      const { data, status, error } = await authApi.login({ email, password });
-      
-      if (status === 'success' && data) {
-        // Store tokens
-        authHelpers.setTokens(data.access_token, data.refresh_token);
-        authHelpers.setUserData(data.user);
-        setUser(data.user);
-      } else {
-        throw new Error(error || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+    setUser(mockUser);
   };
 
   const logout = () => {
-    authHelpers.clearTokens();
     setUser(null);
   };
 
-  const register = async (data: { email: string; password: string; full_name: string; role: 'candidate' | 'recruiter' | 'admin' }) => {
-    try {
-      const { data: authData, status, error } = await authApi.register(data);
-      
-      if (status === 'success' && authData) {
-        // Store tokens
-        authHelpers.setTokens(authData.access_token, authData.refresh_token);
-        authHelpers.setUserData(authData.user);
-        setUser(authData.user);
-      } else {
-        throw new Error(error || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
-  };
-
-  const refreshUser = async () => {
-    try {
-      if (authHelpers.isAuthenticated()) {
-        const { data, status } = await authApi.getCurrentUser();
-        if (status === 'success' && data) {
-          setUser(data);
-          authHelpers.setUserData(data);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-    }
+  const register = (data: any) => {
+    const mockUser: User = {
+      id: Math.random().toString(),
+      name: data.name,
+      email: data.email,
+      role: data.role || 'candidate',
+      avatar: undefined
+    };
+    setUser(mockUser);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser }}>
+    <AuthContext.Provider value={{ user, login, logout, register }}>
       <Router>
         <Routes>
           {/* Public Routes */}
@@ -223,6 +173,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/candidate/profile"
+            element={
+              <ProtectedRoute allowedRoles={['candidate']}>
+                <CandidateProfile />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Recruiter Routes */}
           <Route
@@ -245,7 +203,7 @@ export default function App() {
             path="/recruiter/candidate-profile/:candidateId"
             element={
               <ProtectedRoute allowedRoles={['recruiter']}>
-                <CandidateProfile />
+                <RecruiterCandidateProfile />
               </ProtectedRoute>
             }
           />
@@ -254,6 +212,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['recruiter']}>
                 <RecruiterSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recruiter/profile"
+            element={
+              <ProtectedRoute allowedRoles={['recruiter']}>
+                <RecruiterProfile />
               </ProtectedRoute>
             }
           />
@@ -272,6 +238,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/profile"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminProfile />
               </ProtectedRoute>
             }
           />

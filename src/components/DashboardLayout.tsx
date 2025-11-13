@@ -87,17 +87,19 @@ export default function DashboardLayout({ children, role }: DashboardLayoutProps
 
         {/* User Profile */}
         <div className="p-6 border-b">
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                {user?.name.split(' ').map(n => n[0]).join('') || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="truncate">{user?.name}</div>
-              <div className="text-sm text-gray-500 capitalize">{role}</div>
+          <Link to={`/${role}/profile`} className="block">
+            <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+              <Avatar>
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  {user?.name.split(' ').map(n => n[0]).join('') || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <div className="truncate">{user?.name}</div>
+                <div className="text-sm text-gray-500 capitalize">{role}</div>
+              </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Navigation */}

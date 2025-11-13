@@ -46,7 +46,11 @@ export const API_ENDPOINTS = {
   // Admin functions
   ADMIN_STATS: '/admin/stats',
   ADMIN_USERS: '/admin/users',
-  
+
+  // Feedback
+  FEEDBACK: '/feedback',
+  FEEDBACK_STATS: '/feedback/stats/summary',
+
   // Health
   HEALTH: '/health',
 };
@@ -285,6 +289,52 @@ export const adminApi = {
   },
 };
 
+// Feedback API functions
+export const feedbackApi = {
+  async submitFeedback(feedbackData: {
+    feedback_type: string;
+    subject: string;
+    message: string;
+    rating?: number;
+    page_url?: string;
+  }): Promise<ApiResponse<any>> {
+    return apiRequest(API_ENDPOINTS.FEEDBACK, {
+      method: 'POST',
+      body: JSON.stringify(feedbackData),
+    });
+  },
+
+  async getFeedback(params?: {
+    feedback_type?: string;
+    status?: string;
+  }): Promise<ApiResponse<any[]>> {
+    const queryParams = params ? new URLSearchParams(params).toString() : '';
+    const endpoint = queryParams ? `${API_ENDPOINTS.FEEDBACK}?${queryParams}` : API_ENDPOINTS.FEEDBACK;
+    return apiRequest(endpoint);
+  },
+
+  async getFeedbackById(id: string): Promise<ApiResponse<any>> {
+    return apiRequest(`${API_ENDPOINTS.FEEDBACK}/${id}`);
+  },
+
+  async updateFeedbackStatus(id: string, status: string): Promise<ApiResponse<any>> {
+    return apiRequest(`${API_ENDPOINTS.FEEDBACK}/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  async deleteFeedback(id: string): Promise<ApiResponse<any>> {
+    return apiRequest(`${API_ENDPOINTS.FEEDBACK}/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getFeedbackStats(): Promise<ApiResponse<any>> {
+    return apiRequest(API_ENDPOINTS.FEEDBACK_STATS);
+  },
+};
+
 // Health check
 export const healthApi = {
   async check(): Promise<ApiResponse<any>> {
@@ -413,6 +463,7 @@ export default {
   ai: aiApi,
   dashboard: dashboardApi,
   admin: adminApi,
+  feedback: feedbackApi,
   health: healthApi,
   helpers: authHelpers,
   endpoints: API_ENDPOINTS,

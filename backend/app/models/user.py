@@ -151,3 +151,50 @@ class Token(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: UserProfile
+
+class Feedback(BaseModel):
+    """User feedback model."""
+    id: Optional[str] = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    user_id: Optional[str] = None
+    feedback_type: str = Field(..., description="Type of feedback: bug, feature, general")
+    subject: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1, max_length=2000)
+    rating: Optional[int] = Field(None, ge=1, le=5, description="Rating from 1-5")
+    page_url: Optional[str] = None
+    user_agent: Optional[str] = None
+    status: str = Field(default="pending", description="Status: pending, reviewed, resolved")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+    @classmethod
+    def from_mongo(cls, data: dict) -> "Feedback":
+        """Create Feedback instance from MongoDB document."""
+        if "_id" in data and isinstance(data["_id"], ObjectId):
+            data["_id"] = str(data["_id"])
+        return cls(**data)
+
+class FeedbackCreate(BaseModel):
+    """Feedback creation model."""
+    feedback_type: str
+    subject: str
+    message: str
+    rating: Optional[int] = Field(None, ge=1, le=5)
+    page_url: Optional[str] = None
+
+class FeedbackResponse(BaseModel):
+    """Feedback response model."""
+    id: str
+    user_id: Optional[str]
+    feedback_type: str
+    subject: str
+    message: str
+    rating: Optional[int]
+    page_url: Optional[str]
+    status: str
+    created_at: datetime
+    updated_at: datetime

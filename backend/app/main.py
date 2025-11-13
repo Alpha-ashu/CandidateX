@@ -18,6 +18,7 @@ from app.interviews.routes import router as interviews_router
 from app.dashboard.routes import router as dashboard_router
 from app.admin.routes import router as admin_router
 from app.ai.routes import router as ai_router
+from app.feedback.routes import router as feedback_router
 from app.websocket.routes import router as websocket_router
 from app.utils.database import init_database, db_manager
 from app.middleware.security import (
@@ -179,6 +180,12 @@ app.include_router(
     ai_router,
     prefix="/api/v1/ai",
     tags=["AI Assistant"]
+)
+
+app.include_router(
+    feedback_router,
+    prefix="/api/v1/feedback",
+    tags=["Feedback"]
 )
 
 app.include_router(

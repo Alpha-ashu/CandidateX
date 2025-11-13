@@ -10,6 +10,7 @@ A comprehensive AI-powered mock interview and hiring platform backend built with
 - **Real-time Communication**: WebSocket support for live interviews and notifications
 - **AI Integration**: Google Gemini/OpenAI integration for question generation and feedback
 - **Dashboard & Analytics**: Comprehensive analytics for candidates, recruiters, and admins
+- **Feedback System**: User feedback collection and management with ratings and categorization
 - **Admin Panel**: System administration, monitoring, and configuration
 - **Anti-cheat System**: Real-time monitoring and violation detection
 - **Resume Processing**: ATS scoring and skills analysis
@@ -149,6 +150,14 @@ See `.env.example` for all available configuration options.
 - `GET /api/v1/dashboard/admin/overview` - Admin dashboard
 - `GET /api/v1/dashboard/admin/analytics` - Admin analytics
 
+### Feedback
+- `POST /api/v1/feedback/` - Submit feedback
+- `GET /api/v1/feedback/` - List feedback submissions
+- `GET /api/v1/feedback/{feedback_id}` - Get feedback by ID
+- `PUT /api/v1/feedback/{feedback_id}/status` - Update feedback status
+- `DELETE /api/v1/feedback/{feedback_id}` - Delete feedback
+- `GET /api/v1/feedback/stats/summary` - Get feedback statistics
+
 ### Administration
 - `GET /api/v1/admin/system/health` - System health check
 - `GET /api/v1/admin/system/metrics` - System metrics
@@ -170,6 +179,7 @@ See `.env.example` for all available configuration options.
 
 - **users**: User accounts and profiles
 - **interviews**: Interview sessions and responses
+- **feedback**: User feedback submissions and management
 - **anti_cheat_events**: Anti-cheat monitoring events
 - **audit_logs**: System audit trail
 - **live_interviews**: Live interview sessions
